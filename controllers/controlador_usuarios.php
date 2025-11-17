@@ -16,24 +16,51 @@ try {
                 empty($_POST['password']) || 
                 empty($_POST['privi_id'])
             ) {
-                throw new Exception("Todos los campos son obligatorios.");
+                echo json_encode(['status' => 'error', 'error' => "Todos los campos son obligatorios."]);
+                exit;
             }
-
-            // Sanitizar datos
+        
+            // Sanitizar y validar datos
             $nombre = htmlspecialchars($_POST['nombre']);
             $apellidoPat = htmlspecialchars($_POST['apellidoPaterno']);
             $apellidoMat = htmlspecialchars($_POST['apellidoMaterno']);
             $usuario = htmlspecialchars($_POST['usuario']);
-            $password = htmlspecialchars($_POST['password']);
+            $password = $_POST['password'];
             $privi_id = (int)$_POST['privi_id'];
+        
+            // Validaciones adicionales del lado del servidor para el Nombre del Usuario.
+            if (strlen($nombre) < 3) {
+                echo json_encode(['status' => 'error', 'error' => "El Nombre debe tener al menos 3 letras."]);
+                exit;
+            }
+            
+            if (!preg_match('/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/', $nombre)) {
+                echo json_encode(['status' => 'error', 'error' => "El Nombre solo puede contener letras."]);
+                exit;
+            }
+        
+            if (strlen($apellidoPat) < 3) {
+                echo json_encode(['status' => 'error', 'error' => "El Apellido Paterno debe tener al menos 3 letras."]);
+                exit;
+            }
+               // Validaciones adicionales del lado del servidor para el apellido Paterno del Usuario.
+            if (!preg_match('/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/', $apellidoPat)) {
+                echo json_encode(['status' => 'error', 'error' => "El Apellido Paterno solo puede contener letras."]);
+                exit;
+            }
+                    // Validar que el usuario no exista ya en la base de datos
+            if ($usuarioModel->usuarioExiste($usuario)) {
+                echo json_encode(['status' => 'error', 'campo' => 'usuario', 'error' => "El nombre de usuario ya está en uso en base de datos."]);
+                exit;
+            }
 
             // Llamar al método del modelo
             if ($usuarioModel->agregarUsuario($nombre, $apellidoPat, $apellidoMat, $usuario, $password, $privi_id)) {
                 echo json_encode(['status' => 'ok']);
             } else {
-                throw new Exception("Error al agregar el usuario.");
+                echo json_encode(['status' => 'error', 'error' => "Error al agregar el usuario."]);
             }
-            break; //  
+            break;
 
         case 'obtener':
             // Obtener usuarios y enviarlos como JSON
@@ -63,6 +90,12 @@ try {
             $usuario = htmlspecialchars($_POST['usuario']);
             $password = htmlspecialchars($_POST['password']);
             $privi_id = (int)$_POST['privi_id'];
+
+            //llama al controlador para ejecutar la sentencia de validacion//
+            if ($usuarioModel->usuarioExisteExcepto($usuario, $id)) {
+                echo json_encode(['status' => 'error', 'campo' => 'usuario', 'error' => "El nombre de usuario ya está en uso en base de datos."]);
+                exit;
+            }
 
             // Llamar al método del modelo
             if ($usuarioModel->actualizarUsuario($id, $nombre, $apellidoPat, $apellidoMat, $usuario, $password, $privi_id)) {

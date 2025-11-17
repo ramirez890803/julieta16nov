@@ -57,5 +57,19 @@ class Usuario {  //clase usuario//
         }
         return true;
     }
+    //valida que el el nombre de usuario no este duplicado//
+    public function usuarioExiste($usuario) {
+        $sql = "SELECT COUNT(*) FROM usuarios WHERE username = :usuario";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':usuario' => $usuario]);
+        return $stmt->fetchColumn() > 0;
+    }
+      //valida que el el nombre de usuario si existe es igual al reportado se pueda almacenar pero si se modifica a alguno que ya esta en base lo rechazara.//
+    public function usuarioExisteExcepto($usuario, $id) {
+        $sql = "SELECT COUNT(*) FROM usuarios WHERE username = :usuario AND id != :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':usuario' => $usuario, ':id' => $id]);
+        return $stmt->fetchColumn() > 0;
+    }
 }
 ?>

@@ -56,12 +56,43 @@ class Cliente {
         return $stmt->execute();
     }
 
-    // Método para eliminar un cliente
-    public function eliminarCliente($idclie) {
+    
+
+    public function eliminarCliente($idclie) {//funcion para eliminar usuario//
         $sql = "DELETE FROM clientes WHERE idclie = :idclie";
         $stmt = $this->pdo->prepare($sql);
-        $stmt->bindParam(':idclie', $idclie);
-        return $stmt->execute();
+        if (!$stmt->execute([':idclie' => $idclie])) {
+            throw new Exception("Error al eliminar el cliente: " . implode(", ", $stmt->errorInfo()));
+        }
+        return true;
     }
+
+   public function RFC_clieExiste($RFC_clie, $idExcluido = 0) {
+    if ($idExcluido > 0) {
+        $sql = "SELECT COUNT(*) FROM clientes WHERE RFC_clie = :RFC_clie AND idclie <> :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':RFC_clie' => $RFC_clie, ':id' => $idExcluido]);
+    } else {
+        $sql = "SELECT COUNT(*) FROM clientes WHERE RFC_clie = :RFC_clie";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':RFC_clie' => $RFC_clie]);
+    }
+    return $stmt->fetchColumn() > 0;
+}
+
+public function CurpExiste($Curp, $idExcluido = 0) {
+    if ($idExcluido > 0) {
+        $sql = "SELECT COUNT(*) FROM clientes WHERE Curp = :Curp AND idclie <> :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':Curp' => $Curp, ':id' => $idExcluido]);
+    } else {
+        $sql = "SELECT COUNT(*) FROM clientes WHERE Curp = :Curp";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':Curp' => $Curp]);
+    }
+    return $stmt->fetchColumn() > 0;
+}
+   
+
 }
 ?>
